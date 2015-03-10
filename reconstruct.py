@@ -65,7 +65,7 @@ spec_mean = mean_stats[1:n_log_mel_components + 1]
 
 X = h5_file.root.data[idx]
 f0 = X[:, 0] * max_stats[0]
-log_mel_spectrogram = X[:, 1:n_log_mel_components + 1] * std_stats[1:128] +
+log_mel_spectrogram = X[:, 1:n_log_mel_components + 1] * std_stats[1:128]
 residual = X[:, -n_residual_components:]
 mel_spectrogram = np.exp(log_mel_spectrogram)
 # 1024 is constant

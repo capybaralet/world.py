@@ -21,10 +21,14 @@ f0_data = []
 file_keys = []
 period = 5.0
 opt = pyDioOption(40.0, 700, 2.0, period, 4)
-for n, wav_file in enumerate(wav_files):
-    print("Processing file %i : %s" % (n, wav_file))
-    fs, X = wavfile.read(wav_file)
-    X = X.astype('float64')
+
+test_sin = np.vstack((np.sin(np.linspace(0,24*np.pi, 80*12)), np.sin(np.linspace(0,12*np.pi, 80*12))))
+
+for X in [test_sin]:
+#for n, wav_file in enumerate(wav_files):
+    #print("Processing file %i : %s" % (n, wav_file))
+    #fs, X = wavfile.read(wav_file)
+    #X = X.astype('float64')
     f0, time_axis = dio(X, fs, period, opt)
     f0 = stonemask(X, fs, period, time_axis, f0)
     spectrogram = cheaptrick(X, fs, period, time_axis, f0)
@@ -34,7 +38,10 @@ for n, wav_file in enumerate(wav_files):
     f0_data.append(f0)
     spectrogram_data.append(log_spectrogram)
     residual_data.append(residual)
-    file_keys.append(wav_file)
+    #file_keys.append(wav_file)
+
+
+
 
 def normalize(X):
     fixed_std = X.std(axis=0)
@@ -71,4 +78,5 @@ np.save("f0_and_factor_data.npy", t)
 np.save("spectrogram_statistics.npy", stats_s)
 np.save("residual_statistics.npy", stats_r)
 np.save("spectrogram_transform_matrix.npy", tf_s.components_)
+
 np.save("residual_transform_matrix.npy", tf_r.components_)
