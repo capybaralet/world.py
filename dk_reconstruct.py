@@ -29,29 +29,7 @@ def soundsc(X, copy=True):
     return X.astype('int16')
 
 
-"""
-base_dir = '/u/kruegerd/TTS_current/speechgeneration/genwav/'
-filenames = []
-files_are_wav = True
-my_files = []
-
-for i in range(4):
-    filename = base_dir + 'timit100_preds'+str(i)+'.wav'
-    filenames.append(filename)
-    if files_are_wav:
-        X = wav.read(filename)[1].reshape((-1,229))
-    else:
-        X = np.load(filename).reshape((-1,229))
-
-    X = np.vstack((X,X,X,X,X))
-
-    save_name = filename
-
-    #my_file2 = np.load('/u/kruegerd/TTS_current/speechgeneration/timit_preds9_ground_truth_residuals.npy')
-    #X = my_file.reshape((-1,229))
-"""
-
-def vocoder_synth(X, save_name=None): 
+def vocoder_synth(X, save_name=None, normalized=False):
     """X.shape = nframes, 229"""
 
     # WORLD does some strange padding in the analysis, resulting in a longer signal than expected
@@ -62,19 +40,26 @@ def vocoder_synth(X, save_name=None):
     n_log_mel_components = 2 * 64
     n_residual_components = 100
 
-    # Undo normalization
-    m = np.load('/data/lisatmp/dinhlaur/kastner_invited/min_max_mean_std.npy')
-    min_stats = m[0]
-    max_stats = m[1]
-    mean_stats = m[2]
-    std_stats = m[3]
-    f0_max = max_stats[0]
-    spec_mean = mean_stats[1:n_log_mel_components + 1]
-    f0 = X[:, 0] * max_stats[0]
-    log_mel_spectrogram = X[:, 1:n_log_mel_components + 1] * std_stats[1:129] + mean_stats[1:129]
-    residual = X[:, -n_residual_components:] * std_stats[129:] + mean_stats[129:]
-    mel_spectrogram = np.exp(log_mel_spectrogram)
-    spectrogram = np.ascontiguousarray(invmelspec(mel_spectrogram, fs, 1024)) + 1E-12
+    if normalized: # Undo normalization
+        m = np.load('/data/lisatmp/dinhlaur/kastner_invited/min_max_mean_std.npy')
+        min_stats = m[0]
+        max_stats = m[1]
+        mean_stats = m[2]
+        std_stats = m[3]
+        f0_max = max_stats[0]
+        spec_mean = mean_stats[1:n_log_mel_components + 1]
+        f0 = X[:, 0] * max_stats[0]
+        log_mel_spectrogram = X[:, 1:n_log_mel_components + 1] * std_stats[1:129] + mean_stats[1:129]
+        residual = X[:, -n_residual_components:] * std_stats[129:] + mean_stats[129:]
+        mel_spectrogram = np.exp(log_mel_spectrogram)
+        spectrogram = np.ascontiguousarray(invmelspec(mel_spectrogram, fs, 1024)) + 1E-12
+    else:
+        f0 = X[:, 0]
+        log_mel_spectrogram = X[:, 1:n_log_mel_components + 1]
+        residual = X[:, -n_residual_components:]
+        mel_spectrogram = np.exp(log_mel_spectrogram)
+        spectrogram = np.ascontiguousarray(invmelspec(mel_spectrogram, fs, 1024)) + 1E-12
+
 
     # Undo PCA
     residual_matrix = np.load('/data/lisatmp/dinhlaur/kastner_invited/timit/test_residual_matrix.npy')

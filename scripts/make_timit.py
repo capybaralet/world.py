@@ -2,7 +2,7 @@ import numpy as np
 import sys
 from world import *
 import os
-from librosa_ports import melspec
+#from librosa_ports import melspec
 from sklearn.decomposition import PCA
 from numpy.lib.stride_tricks import as_strided
 
@@ -11,7 +11,7 @@ if len(sys.argv) < 2 or sys.argv[1] == "-h" or sys.argv[1] == "--help":
     print("Usage: make_timit.py <timit_npy_file> <timit_phones_file> [output_dir=.]")
     quit()
 
-period = 5.0
+period = 5.0 # how far to step in ms
 fs = 16000
 opt = pyDioOption(40.0, 700, 2.0, period, 4)
 
@@ -29,7 +29,7 @@ else:
     vocoded_path = 'vocoded_TIMIT.npy'
     labels_path = 'reshaped_TIMIT_labels.npy'
 
-s_n_components = 64
+s_n_components = 64 # actually, *2!!
 r_n_components = 100
 
 f0s = []
@@ -39,11 +39,14 @@ ds = np.load(input_file)
 ls = np.load(label_file)
 for i, X in enumerate(ds[:100]):
     X = X.astype('float64')
+    # extract f0
     f0, time_axis = dio(X, fs, period, opt)
     f0 = stonemask(X, fs, period, time_axis, f0)
+    # get spectral components
     spectrogram = cheaptrick(X, fs, period, time_axis, f0)
     mel_spectrogram = melspec(spectrogram, fs, s_n_components)
     log_mel_spectrogram = np.log(mel_spectrogram)
+    # get spectral components
     residual = platinum(X, fs, period, time_axis, f0, spectrogram)
     residuals.append(residual)
     spectrograms.append(spectrogram)
